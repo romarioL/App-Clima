@@ -1,25 +1,62 @@
 window.addEventListener('load', () =>{
-	let longitude;
-	let latitude;
+   let lat
+   let long
+   let temperatureDescription = document.querySelector('.temperature-description')
+   let temperatureDegree = document.querySelector('.temperature-degree')
+   let locationTimezone = document.querySelector('.location-timezone')
+   let temperatureSection = document.querySelector('.temperature')
+   let temperatureSpan = document.querySelector('.temperature span')
 
 	if(navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
-             longitude = position.coords.longitude
-             latitude = position.coords.latitude
+             long = position.coords.longitude
+             lat = position.coords.latitude
 
+             const proxy = 'https://cors-anywhere.herokuapp.com/'
 
-             const api = `https://api.darksky.net/forecast/544a42dae507ce360ad26231c8569bf3/${latitude},${longitude}`
+             const api = `${proxy}https://api.darksky.net/forecast/544a42dae507ce360ad26231c8569bf3/${lat},${long}`
+
+             //console.log(api)
+
+              fetch(api)
+               .then(response => {
+                  return response.json()
+               })
+               .then( data => {
+                  //console.log(data)
+                  const {temperature, summary, icon} = data.currently
+                  // Configurar DOM
+                  temperatureDegree.textContent = temperature
+                  temperatureDescription.textContent = summary
+                  locationTimezone.textContent = data.timezone
+
+                  //formula para transformar em celsius 
+                  let celsius = (temperature - 32 ) * (5/9)
+
+                  //set icons
+
+                  setIcons(icon, document.querySelector('.icon'))
+
+                  //mudar temperatura para Celcius 
+
+                  temperatureSection.addEventListener('click', () => {
+                    if(temperatureSpan.textContent === "F") {
+                      temperatureSpan.textContent = "C"
+                      temperatureDegree.textContent = Math.floor(celsius)
+                    }else {
+                      temperatureSpan.textContent = "F"
+                      temperatureDegree.textContent = temperature
+                    }
+                  })
+               })
         })
-	}else {
-		h1.textContent = "Sistema fora do ar. Por favor, habilite seu GPS!"
 	}
 
-	fetch(api)
-	   .then(response => {
-	   	  return response.json()
-	   })
-	   .then(data => {
-	   	console.log(data)
-	   })
+  function setIcons(icon, iconID) {
+      const skycons = new Skycons({color: "white"})
+      const currentIcon = icon.replace(/-/g, "_").toUpperCase()
+      skycons.play()
+      return skycons.set(iconID, Skycons[currentIcon])
+  }
 
 })
